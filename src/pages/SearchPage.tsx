@@ -112,7 +112,7 @@ export function SearchPage() {
       <h1 className="page__title">{t.search.title}</h1>
 
       {/* 1. Link annuncio */}
-      <section className="card">
+      <section className="card card--step">
         <label className="field-label" htmlFor="link-input">
           {t.search.linkLabel}
         </label>
@@ -139,7 +139,7 @@ export function SearchPage() {
       <div className="divider">{t.search.orDivider}</div>
 
       {/* 2. Indirizzo / nome struttura */}
-      <section className="card">
+      <section className="card card--step">
         <label className="field-label" htmlFor="address-input">
           {t.search.addressLabel}
         </label>
@@ -171,7 +171,7 @@ export function SearchPage() {
       </section>
 
       {/* 3. Coordinate */}
-      <section className="card">
+      <section className="card card--step">
         <label className="field-label" htmlFor="coords-input">
           {t.search.coordsLabel}
         </label>
@@ -192,7 +192,7 @@ export function SearchPage() {
       </section>
 
       {/* 4. Selezione su mappa */}
-      <section className="card">
+      <section className="card card--step">
         <button
           type="button"
           className="btn btn--block"
