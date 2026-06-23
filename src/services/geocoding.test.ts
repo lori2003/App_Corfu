@@ -23,4 +23,15 @@ describe('buildFallbackQueries', () => {
     const original = 'Ολύμπου - Olympou, Kavos, 490 80, Grecia';
     expect(buildFallbackQueries(original)).not.toContain(original);
   });
+
+  it('come ultima risorsa propone solo la località se via/struttura non mappata', () => {
+    const variants = buildFallbackQueries(
+      'Ολύμπου - Olympou, Kavos, 490 80, Grecia',
+    );
+    expect(variants).toContain('Kavos, Grecia');
+  });
+
+  it('non riduce a una sola parola (il paese) un indirizzo già minimale', () => {
+    expect(buildFallbackQueries('Corfu Town, Grecia')).toEqual([]);
+  });
 });

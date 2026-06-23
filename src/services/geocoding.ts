@@ -108,6 +108,14 @@ export function buildFallbackQueries(original: string): string[] {
     }
   }
 
+  // Ultima risorsa: molte vie minori delle zone turistiche (es. Kavos) non
+  // sono mappate in OpenStreetMap a livello di strada. Se nessuna variante
+  // precedente trova nulla, si prova solo con la località, per dare comunque
+  // un punto di partenza utile invece di un fallimento totale.
+  if (baseSegments.length > 2) {
+    variants.add(baseSegments.slice(1).join(', '));
+  }
+
   variants.delete(original);
   return Array.from(variants).filter((v) => v.length >= 3);
 }
