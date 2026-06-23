@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reindirizzamento…</title>
+    <script>
+      // L'app è una Single Page App con navigazione a schede (nessun routing
+      // basato su path). Se GitHub Pages serve un percorso inesistente,
+      // reindirizziamo alla radice del sito/sottopercorso del progetto.
+      (function () {
+        var path = window.location.pathname;
+        // Mantiene il primo segmento (es. "/app_corfu/") quando presente.
+        var segments = path.split('/').filter(Boolean);
+        var base = segments.length > 0 ? '/' + segments[0] + '/' : '/';
+        window.location.replace(base);
+      })();
+    </script>
+  </head>
+  <body>
+    <p>Reindirizzamento alla home…</p>
+  </body>
+</html>
