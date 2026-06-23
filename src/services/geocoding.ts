@@ -29,11 +29,30 @@ interface NominatimItem {
 /**
  * Cerca un indirizzo o il nome di una struttura e restituisce i risultati,
  * dando priorità all'area di Corfù.
+ *
+ * Gli indirizzi copiati da annunci (Booking/Airbnb) contengono spesso due
+ * varianti dello stesso nome separate da " - " (greco e traslitterato) e
+ * codici postali con spazio interno: Nominatim non trova nulla con la
+ * stringa completa in questi casi, quindi se la prima ricerca non dà
+ * risultati si ritenta con versioni progressivamente semplificate.
  */
 export async function geocode(query: string): Promise<GeocodeResult[]> {
   const q = sanitizeText(query, 200);
   if (q.length < 3) return [];
 
+  const results = await geocodeOnce(q);
+  if (results.length > 0) return results;
+
+  for (const variant of buildFallbackQueries(q)) {
+    // Rispetta il limite di 1 richiesta/secondo della usage policy di Nominatim.
+    await delay(1100);
+    const fallbackResults = await geocodeOnce(variant);
+    if (fallbackResults.length > 0) return fallbackResults;
+  }
+  return [];
+}
+
+async function geocodeOnce(q: string): Promise<GeocodeResult[]> {
   const params = new URLSearchParams({
     q,
     format: 'jsonv2',
@@ -53,6 +72,44 @@ export async function geocode(query: string): Promise<GeocodeResult[]> {
       .map(mapItem)
       .filter((r): r is GeocodeResult => r !== null);
   });
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+const POSTCODE_SEGMENT = /^[\d\s]{4,8}$/;
+
+/**
+ * Genera varianti semplificate della query, dalla più alla meno specifica:
+ * rimuove il segmento del codice postale e, se il primo segmento contiene
+ * due varianti del nome separate da " - ", le prova singolarmente.
+ */
+export function buildFallbackQueries(original: string): string[] {
+  const segments = original
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (segments.length === 0) return [];
+
+  const withoutPostcode = segments.filter((s) => !POSTCODE_SEGMENT.test(s));
+  const variants = new Set<string>();
+
+  if (withoutPostcode.length !== segments.length && withoutPostcode.length > 0) {
+    variants.add(withoutPostcode.join(', '));
+  }
+
+  const baseSegments = withoutPostcode.length > 0 ? withoutPostcode : segments;
+  const dashMatch = baseSegments[0]?.match(/^(.+?)\s+-\s+(.+)$/);
+  if (dashMatch) {
+    const [, nameA, nameB] = dashMatch;
+    for (const name of [nameB, nameA]) {
+      variants.add([name, ...baseSegments.slice(1)].join(', '));
+    }
+  }
+
+  variants.delete(original);
+  return Array.from(variants).filter((v) => v.length >= 3);
 }
 
 /** Reverse geocoding: da coordinate a indirizzo leggibile. */
